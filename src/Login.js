@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { auth } from './firebase';
 import {
   signInWithEmailAndPassword,
@@ -9,7 +9,8 @@ const S = {
   screen: {
     minHeight: '100vh', background: '#f7f5f0', display: 'flex',
     flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-    padding: '24px 20px', fontFamily: "'Source Sans Pro','Segoe UI',system-ui,sans-serif",
+    padding: '24px 20px',
+    fontFamily: "'Source Sans Pro','Segoe UI',system-ui,sans-serif",
   },
   logo: {
     width: 64, height: 64, borderRadius: 16, background: '#244a3b',
@@ -23,22 +24,29 @@ const S = {
     background: '#fff', borderRadius: 16, border: '1px solid #e2e0d6',
     padding: '24px 20px', width: '100%', maxWidth: 380,
   },
-  label: { fontSize: 12, fontWeight: 700, color: '#5c6b56', marginBottom: 5, display: 'block', letterSpacing: '0.04em' },
+  label: {
+    fontSize: 12, fontWeight: 700, color: '#5c6b56', marginBottom: 5,
+    display: 'block', letterSpacing: '0.04em',
+  },
   input: {
     width: '100%', padding: '12px 14px', borderRadius: 10,
     border: '1.5px solid #e2e0d6', fontSize: 16, color: '#22301f',
-    background: '#fcfbf8', marginBottom: 14, boxSizing: 'border-box',
-    fontFamily: 'inherit',
+    background: '#fff', marginBottom: 14, boxSizing: 'border-box',
+    fontFamily: 'inherit', WebkitAppearance: 'none', appearance: 'none',
+    outline: 'none',
   },
   btn: {
     width: '100%', padding: '14px 0', borderRadius: 10, border: 'none',
-    background: '#2f5d4a', color: '#fff', fontSize: 15, fontWeight: 700,
-    cursor: 'pointer', marginTop: 4,
+    background: '#2f5d4a', color: '#fff', fontSize: 16, fontWeight: 700,
+    cursor: 'pointer', marginTop: 4, WebkitAppearance: 'none',
   },
   toggle: {
     marginTop: 16, textAlign: 'center', fontSize: 13.5, color: '#8a9a8e',
   },
-  toggleLink: { color: '#2f5d4a', fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' },
+  toggleLink: {
+    color: '#2f5d4a', fontWeight: 600, cursor: 'pointer',
+    textDecoration: 'underline',
+  },
   error: {
     background: '#fdf0e8', border: '1px solid #f0d8d3', borderRadius: 8,
     padding: '10px 12px', fontSize: 13, color: '#9c4a26', marginBottom: 14,
@@ -46,11 +54,21 @@ const S = {
 };
 
 export default function Login() {
-  const [mode, setMode] = useState('signin'); // 'signin' | 'signup'
+  const [mode, setMode] = useState('signin');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const emailRef = useRef(null);
+  const passwordRef = useRef(null);
+
+  const focusInput = (ref) => {
+    if (ref.current) {
+      ref.current.focus();
+      // iOS PWA sometimes needs a tiny delay
+      setTimeout(() => { if (ref.current) ref.current.focus(); }, 50);
+    }
+  };
 
   const handle = async () => {
     setError(''); setLoading(true);
@@ -84,35 +102,67 @@ export default function Login() {
           {mode === 'signin' ? 'Sign in to your account' : 'Create a device account'}
         </div>
         {error && <div style={S.error}>{error}</div>}
-        <label style={S.label}>EMAIL</label>
+
+        <label style={S.label} htmlFor="iel-email">EMAIL</label>
         <input
-          style={S.input} type="email" placeholder="you@example.com"
-          value={email} onChange={e => setEmail(e.target.value)}
-          onKeyDown={e => e.key === 'Enter' && handle()}
-          onClick={e => e.target.focus()}
-          autoCapitalize="none" autoCorrect="off" autoComplete="email"
+          id="iel-email"
+          ref={emailRef}
+          style={S.input}
+          type="email"
+          inputMode="email"
+          placeholder="you@example.com"
+          value={email}
+          onChange={e => setEmail(e.target.value)}
+          onTouchEnd={() => focusInput(emailRef)}
+          onClick={() => focusInput(emailRef)}
+          onKeyDown={e => e.key === 'Enter' && passwordRef.current && passwordRef.current.focus()}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="email"
+          spellCheck="false"
         />
-        <label style={S.label}>PASSWORD</label>
+
+        <label style={S.label} htmlFor="iel-password">PASSWORD</label>
         <input
-          style={S.input} type="password" placeholder="Password"
-          value={password} onChange={e => setPassword(e.target.value)}
+          id="iel-password"
+          ref={passwordRef}
+          style={S.input}
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={e => setPassword(e.target.value)}
+          onTouchEnd={() => focusInput(passwordRef)}
+          onClick={() => focusInput(passwordRef)}
           onKeyDown={e => e.key === 'Enter' && handle()}
-          onClick={e => e.target.focus()}
           autoComplete="current-password"
         />
-        <button style={{ ...S.btn, opacity: loading ? 0.6 : 1 }} onClick={handle} disabled={loading}>
-          {loading ? 'Please waitâ€¦' : mode === 'signin' ? 'Sign in' : 'Create account'}
+
+        <button
+          style={{ ...S.btn, opacity: loading ? 0.6 : 1 }}
+          onClick={handle}
+          disabled={loading}
+        >
+          {loading ? 'Please wait...' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </button>
+
         <div style={S.toggle}>
           {mode === 'signin' ? (
-            <>First time on this device? <span style={S.toggleLink} onClick={() => { setMode('signup'); setError(''); }}>Create account</span></>
+            <>First time on this device?{' '}
+              <span style={S.toggleLink} onClick={() => { setMode('signup'); setError(''); }}>
+                Create account
+              </span>
+            </>
           ) : (
-            <>Already have an account? <span style={S.toggleLink} onClick={() => { setMode('signin'); setError(''); }}>Sign in</span></>
+            <>Already have an account?{' '}
+              <span style={S.toggleLink} onClick={() => { setMode('signin'); setError(''); }}>
+                Sign in
+              </span>
+            </>
           )}
         </div>
       </div>
       <div style={{ marginTop: 24, fontSize: 12, color: '#aaa', textAlign: 'center', maxWidth: 300 }}>
-        Each device (your phone, foreman's phone) signs in once and stays logged in.
+        Each device signs in once and stays logged in.
       </div>
     </div>
   );
