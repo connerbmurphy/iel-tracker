@@ -26,7 +26,7 @@ const S = {
   label: { fontSize: 12, fontWeight: 700, color: '#5c6b56', marginBottom: 5, display: 'block', letterSpacing: '0.04em' },
   input: {
     width: '100%', padding: '12px 14px', borderRadius: 10,
-    border: '1.5px solid #e2e0d6', fontSize: 15, color: '#22301f',
+    border: '1.5px solid #e2e0d6', fontSize: 16, color: '#22301f',
     background: '#fcfbf8', marginBottom: 14, boxSizing: 'border-box',
     fontFamily: 'inherit',
   },
@@ -89,16 +89,19 @@ export default function Login() {
           style={S.input} type="email" placeholder="you@example.com"
           value={email} onChange={e => setEmail(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handle()}
-          autoCapitalize="none" autoCorrect="off"
+          onClick={e => e.target.focus()}
+          autoCapitalize="none" autoCorrect="off" autoComplete="email"
         />
         <label style={S.label}>PASSWORD</label>
         <input
-          style={S.input} type="password" placeholder="••••••••"
+          style={S.input} type="password" placeholder="Password"
           value={password} onChange={e => setPassword(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handle()}
+          onClick={e => e.target.focus()}
+          autoComplete="current-password"
         />
         <button style={{ ...S.btn, opacity: loading ? 0.6 : 1 }} onClick={handle} disabled={loading}>
-          {loading ? 'Please wait…' : mode === 'signin' ? 'Sign in' : 'Create account'}
+          {loading ? 'Please waitâ€¦' : mode === 'signin' ? 'Sign in' : 'Create account'}
         </button>
         <div style={S.toggle}>
           {mode === 'signin' ? (
