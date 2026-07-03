@@ -49,7 +49,7 @@ const todayStr = () => new Date().toISOString().slice(0,10);
 const nowTimeStr = () => { const n=new Date(); return `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}`; };
 const fmtMoney = (n) => `$${(Number(n)||0).toLocaleString(undefined,{maximumFractionDigits:0})}`;
 const fmtMoney2 = (n) => `$${(Number(n)||0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}`;
-const fmtTime = (t) => { if(!t) return 'â€”'; const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
+const fmtTime = (t) => { if(!t) return '-'; const [h,m]=t.split(':').map(Number); return `${h%12||12}:${String(m).padStart(2,'0')} ${h>=12?'PM':'AM'}`; };
 
 function hoursFromPunch(inTime, outTime) {
   if (!inTime||!outTime) return 0;
@@ -97,7 +97,7 @@ function computeJobCosts(job, punches, plantsRec, materialsRec, equipmentLog, tr
     laborCost += calcPersonLaborCost(hrs, rate);
   });
 
-  // Plants â€” totalCost entered as lump sum at job close
+  // Plants - totalCost entered as lump sum at job close
   const pr = plantsRec[job.id] || {};
   const plantItems = pr.items || [];
   const totalPlantQty = plantItems.reduce((s,i)=>s+(Number(i.qty)||0),0);
@@ -233,7 +233,7 @@ export default function App({ accountId }) {
 
   const nav = (v,jobId=null) => { if(jobId) setSelectedJobId(jobId); setView(v); };
 
-  if(loading) return <div style={styles.loadingScreen}><div style={styles.loadingLogo}>IEL</div><div style={{color:'#8a9a8e',fontSize:13}}>LOADINGâ€¦</div></div>;
+  if(loading) return <div style={styles.loadingScreen}><div style={styles.loadingLogo}>IEL</div><div style={{color:'#8a9a8e',fontSize:13}}>LOADING...</div></div>;
 
   const sharedProps = { jobs,punches,plantsRec,materialsRec,equipmentLog,truckLog,trailerLog,rates,equipment,trucks,trailers,stockItems,crew };
 
@@ -276,7 +276,7 @@ function Header({view,onHome,onSettings}) {
             <button style={styles.headerSettings} onClick={onSettings}><Settings size={17}/></button>
             <button style={styles.headerSignOut} onClick={()=>signOut(auth)}>Sign out</button>
           </div>
-          : <button style={styles.headerBack} onClick={onHome}>â† Jobs</button>}
+          : <button style={styles.headerBack} onClick={onHome}>Back</button>}
       </div>
     </div>
   );
@@ -286,7 +286,7 @@ function HomeView({jobs,punches,plantsRec,materialsRec,equipmentLog,truckLog,tra
   const active = jobs.filter(j=>j.status==='active');
   return (
     <div style={styles.screen}>
-      <div style={styles.sectionLabel}>ACTIVE JOBS Â· {active.length}</div>
+      <div style={styles.sectionLabel}>ACTIVE JOBS - {active.length}</div>
       {active.length===0 && <div style={styles.emptyState}>No active jobs. Add one in Settings.</div>}
       {active.map(job=>{
         const c=computeJobCosts(job,punches,plantsRec,materialsRec,equipmentLog,truckLog,trailerLog,rates,equipment,trucks,trailers,stockItems,crew);
@@ -298,8 +298,8 @@ function HomeView({jobs,punches,plantsRec,materialsRec,equipmentLog,truckLog,tra
                 <div style={styles.jobName}>{job.name}</div>
                 <div style={styles.jobMeta}>
                   {c.activePunches.length>0
-                    ? <span style={{color:'#c98a3a',fontWeight:600}}>â— {c.activePunches.length} clocked in</span>
-                    : hasData ? `${c.laborHours.toFixed(1)} labor hrs Â· ${fmtMoney(c.totalCOGS)} COGS` : 'No data yet'}
+                    ? <span style={{color:'#c98a3a',fontWeight:600}}>* {c.activePunches.length} clocked in</span>
+                    : hasData ? `${c.laborHours.toFixed(1)} labor hrs - ${fmtMoney(c.totalCOGS)} COGS` : 'No data yet'}
                 </div>
               </div>
               <ChevronRight size={18} color="#a8b5ac"/>
@@ -357,14 +357,14 @@ function ClockInView({job,crew,punches,onSaveBatch,onCancel}) {
           <div><div style={styles.hourLabel}>Date</div><input type="date" style={styles.timeInput} value={date} onChange={e=>setDate(e.target.value)}/></div>
           <div><div style={styles.hourLabel}>Time</div><input type="time" style={styles.timeInput} value={clockIn} onChange={e=>setClockIn(e.target.value)}/></div>
         </div>
-        <div style={styles.hint}>Clock-in is at the shop â€” drive time is included.</div>
+        <div style={styles.hint}>Clock-in is at the shop - drive time is included.</div>
       </Card>
       <Card>
         <FieldLabel>Who's starting this job?</FieldLabel>
         {available.length===0&&<div style={styles.hint}>All crew members already clocked in for this job today.</div>}
         {available.map(m=>(
           <div key={m.id} style={{...styles.crewSelectRow,background:selected.includes(m.id)?'#eef6f1':'#fafaf8',borderColor:selected.includes(m.id)?'#2f5d4a':'#e2e0d6'}} onClick={()=>toggle(m.id)}>
-            <div><div style={{fontWeight:600,fontSize:14}}>{m.name}</div><div style={{fontSize:12,color:'#8a9a8e'}}>{m.role} Â· ${m.burdenedRate}/hr</div></div>
+            <div><div style={{fontWeight:600,fontSize:14}}>{m.name}</div><div style={{fontSize:12,color:'#8a9a8e'}}>{m.role} - ${m.burdenedRate}/hr</div></div>
             {selected.includes(m.id)&&<Check size={18} color="#2f5d4a"/>}
           </div>
         ))}
@@ -398,11 +398,11 @@ function ClockOutView({job,crew,punches,onClockOutBatch,onCancel}) {
         return (
           <Card key={punch.id}>
             <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>{m?.name||'?'}</div>
-            <div style={{fontSize:12,color:'#8a9a8e',marginBottom:12}}>{m?.role} Â· in {fmtTime(punch.clockIn)}</div>
+            <div style={{fontSize:12,color:'#8a9a8e',marginBottom:12}}>{m?.role} - in {fmtTime(punch.clockIn)}</div>
             <div style={styles.settingsGrid}>
               <div><div style={styles.hourLabel}>Clock-out time</div><input type="time" style={styles.timeInput} value={st.clockOut} onChange={e=>upd(punch.id,{clockOut:e.target.value})}/></div>
               <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
-                <div style={{fontSize:12,color:'#5c6b56'}}>{finalHrs.toFixed(2)}h{ot>0?` Â· ${ot.toFixed(2)}OT`:''}</div>
+                <div style={{fontSize:12,color:'#5c6b56'}}>{finalHrs.toFixed(2)}h{ot>0?` - ${ot.toFixed(2)}OT`:''}</div>
                 <div style={{marginLeft:'auto',fontWeight:700,color:ot>0?'#c98a3a':'#2f5d4a',fontSize:13}}>{fmtMoney2(cost)}</div>
               </div>
             </div>
@@ -456,7 +456,7 @@ function PlantsPanel({jobId,plantsRec,onUpdate}) {
             <div style={styles.panelTitle}>Plants</div>
             <div style={styles.panelSub}>
               {items.length>0
-                ? `${items.length} line${items.length!==1?'s':''} Â· ${totalQty} plants total${rec.totalCost?` Â· ${fmtMoney2(Number(rec.totalCost))} wholesale`:''}` 
+                ? `${items.length} line${items.length!==1?'s':''} - ${totalQty} plants total${rec.totalCost?` - ${fmtMoney2(Number(rec.totalCost))} wholesale`:''}` 
                 : 'No plants logged yet'}
             </div>
           </div>
@@ -497,7 +497,7 @@ function PlantsPanel({jobId,plantsRec,onUpdate}) {
               </select>
               {/* Qty ticker */}
               <div style={styles.qtyTicker}>
-                <button style={styles.qtyBtn} onClick={()=>adjustQty(item.id,-1)}>âˆ’</button>
+                <button style={styles.qtyBtn} onClick={()=>adjustQty(item.id,-1)}>-</button>
                 <input
                   type="number"
                   inputMode="numeric"
@@ -558,7 +558,7 @@ function MaterialsPanel({jobId,materialsRec,stockItems,onUpdate}) {
           <Package size={16} color="#2f5d4a"/>
           <div>
             <div style={styles.panelTitle}>Materials</div>
-            <div style={styles.panelSub}>{items.length>0?`${items.length} item${items.length!==1?'s':''} Â· ${fmtMoney2(Math.max(0,totalCost))}`:'No materials logged yet'}</div>
+            <div style={styles.panelSub}>{items.length>0?`${items.length} item${items.length!==1?'s':''} - ${fmtMoney2(Math.max(0,totalCost))}`:'No materials logged yet'}</div>
           </div>
         </div>
         <div style={{display:'flex',alignItems:'center',gap:8}}>
@@ -579,7 +579,7 @@ function MaterialsPanel({jobId,materialsRec,stockItems,onUpdate}) {
                   <div style={{flex:1}}>
                     <div style={{fontWeight:600,fontSize:13.5,color:item.isReturn?'#b8502f':'#22301f'}}>{item.description||<span style={{color:'#aaa',fontStyle:'italic'}}>Untitled</span>}{item.isReturn?' (return)':''}</div>
                     <div style={{fontSize:11.5,color:'#8a9a8e',marginTop:2}}>
-                      {item.date} {item.source?`Â· ${item.source}`:''} {item.type==='stockDraw'&&si?`Â· ${item.qty} ${si.unit||''} ${si.name}`:''} Â· <span style={{fontWeight:600,color:item.isReturn?'#b8502f':'#2f5d4a'}}>{item.isReturn?'-':''}{fmtMoney2(Math.abs(itemCost))}</span>
+                      {item.date} {item.source?`- ${item.source}`:''} {item.type==='stockDraw'&&si?`- ${item.qty} ${si.unit||''} ${si.name}`:''} - <span style={{fontWeight:600,color:item.isReturn?'#b8502f':'#2f5d4a'}}>{item.isReturn?'-':''}{fmtMoney2(Math.abs(itemCost))}</span>
                     </div>
                   </div>
                   <div style={{display:'flex',gap:4}}>
@@ -685,7 +685,7 @@ function EquipmentTruckPanel({jobId,equipmentLog,truckLog,trailerLog,rates,equip
           <Wrench size={16} color="#2f5d4a"/>
           <div>
             <div style={styles.panelTitle}>Equipment & Trucks</div>
-            <div style={styles.panelSub}>{totalCount>0?`${jobEq.length} equip Â· ${jobTrl.length} trailer Â· ${jobTr.length} truck Â· ${fmtMoney2(totalEqCost+totalTrlCost+totalTrCost)}`:'None logged yet'}</div>
+            <div style={styles.panelSub}>{totalCount>0?`${jobEq.length} equip - ${jobTrl.length} trailer - ${jobTr.length} truck - ${fmtMoney2(totalEqCost+totalTrlCost+totalTrCost)}`:'None logged yet'}</div>
           </div>
         </div>
         {open?<ChevronUp size={18} color="#8a9a8e"/>:<ChevronDown size={18} color="#8a9a8e"/>}
@@ -698,7 +698,7 @@ function EquipmentTruckPanel({jobId,equipmentLog,truckLog,trailerLog,rates,equip
             <div style={{fontSize:11,fontWeight:700,color:'#8a9a8e',letterSpacing:'0.06em',marginBottom:6}}>EQUIPMENT LOG</div>
             {jobEq.map(e=>{const hrs=Math.max(0,(Number(e.endMeter)||0)-(Number(e.startMeter)||0));const ei=equipment.find(x=>x.id===e.equipmentId);return(
               <div key={e.id} style={{...styles.logLine,alignItems:'center'}}>
-                <span>{e.date} Â· {ei?.name||'?'} Â· {hrs.toFixed(1)}hr Â· {fmtMoney2(hrs*(ei?.hourlyCost||0))}</span>
+                <span>{e.date} - {ei?.name||'?'} - {hrs.toFixed(1)}hr - {fmtMoney2(hrs*(ei?.hourlyCost||0))}</span>
                 <button style={{...styles.removeBtn,padding:'2px 4px',marginLeft:4}} onClick={()=>onDeleteEquipment(e.id)}><X size={13}/></button>
               </div>
             );})}
@@ -722,7 +722,7 @@ function EquipmentTruckPanel({jobId,equipmentLog,truckLog,trailerLog,rates,equip
             <div style={{fontSize:11,fontWeight:700,color:'#8a9a8e',letterSpacing:'0.06em',marginBottom:6}}>TRAILER LOG</div>
             {jobTrl.map(t=>{const ti=(trailers||[]).find(x=>x.id===t.trailerId);return(
               <div key={t.id} style={{...styles.logLine,alignItems:'center'}}>
-                <span>{t.date} Â· {ti?.name||'?'} Â· {t.days} day{Number(t.days)!==1?'s':''} Â· {fmtMoney2((Number(t.days)||0)*(ti?.dayRate||0))}</span>
+                <span>{t.date} - {ti?.name||'?'} - {t.days} day{Number(t.days)!==1?'s':''} - {fmtMoney2((Number(t.days)||0)*(ti?.dayRate||0))}</span>
                 <button style={{...styles.removeBtn,padding:'2px 4px',marginLeft:4}} onClick={()=>onDeleteTrailer(t.id)}><X size={13}/></button>
               </div>
             );})}
@@ -746,7 +746,7 @@ function EquipmentTruckPanel({jobId,equipmentLog,truckLog,trailerLog,rates,equip
             <div style={{fontSize:11,fontWeight:700,color:'#8a9a8e',letterSpacing:'0.06em',marginBottom:6}}>TRUCK LOG</div>
             {jobTr.map(t=>{const tr=trucks.find(x=>x.id===t.truckId);return(
               <div key={t.id} style={{...styles.logLine,alignItems:'center'}}>
-                <span>{t.date} Â· {tr?.name||'?'} Â· {t.miles}mi Â· {fmtMoney2((Number(t.miles)||0)*(rates.mileageRate||0))}</span>
+                <span>{t.date} - {tr?.name||'?'} - {t.miles}mi - {fmtMoney2((Number(t.miles)||0)*(rates.mileageRate||0))}</span>
                 <button style={{...styles.removeBtn,padding:'2px 4px',marginLeft:4}} onClick={()=>onDeleteTruck(t.id)}><X size={13}/></button>
               </div>
             );})}
@@ -788,11 +788,11 @@ function PunchLog({punches,crew,onUpdate,onClockOutNow,onDelete}) {
             <div style={{display:'flex',alignItems:'center',gap:10,padding:'11px 13px',cursor:'pointer'}} onClick={()=>setEditingId(isEditing?null:p.id)}>
               {isOpen?<Clock size={14} color="#c98a3a"/>:<Check size={14} color="#2f5d4a"/>}
               <div style={{flex:1}}>
-                <div style={styles.logEntryTitle}>{m?.name||'Unknown'} â€” {m?.role||''}</div>
+                <div style={styles.logEntryTitle}>{m?.name||'Unknown'} - {m?.role||''}</div>
                 <div style={styles.logEntrySub}>
                   {isOpen
-                    ?`In ${fmtTime(p.clockIn)} Â· still on clock Â· ${p.date}`
-                    :`${fmtTime(p.clockIn)} â†’ ${fmtTime(p.clockOut)}${p.overrideHrs!=null?' (manual hrs)':''} Â· ${hrs.toFixed(2)}hr${ot>0?` Â· ${ot.toFixed(2)} OT`:''} Â· ${fmtMoney2(cost)} Â· ${p.date}`}
+                    ?`In ${fmtTime(p.clockIn)} - still on clock - ${p.date}`
+                    :`${fmtTime(p.clockIn)} -> ${fmtTime(p.clockOut)}${p.overrideHrs!=null?' (manual hrs)':''} - ${hrs.toFixed(2)}hr${ot>0?` - ${ot.toFixed(2)} OT`:''} - ${fmtMoney2(cost)} - ${p.date}`}
                   {p.notes&&!isEditing&&<div style={{fontSize:11.5,color:'#8a9a8e',marginTop:2,fontStyle:'italic'}}>{p.notes}</div>}
                 </div>
               </div>
@@ -810,7 +810,7 @@ function PunchLog({punches,crew,onUpdate,onClockOutNow,onDelete}) {
                   <div>
                     <div style={styles.hourLabel}>Crew member</div>
                     <select style={{...styles.select,flex:'unset',width:'100%'}} value={p.crewId} onChange={e=>onUpdate(p.id,{crewId:e.target.value})}>
-                      {crew.map(c=><option key={c.id} value={c.id}>{c.name} â€” {c.role}</option>)}
+                      {crew.map(c=><option key={c.id} value={c.id}>{c.name} - {c.role}</option>)}
                     </select>
                   </div>
                   <div>
@@ -837,7 +837,7 @@ function PunchLog({punches,crew,onUpdate,onClockOutNow,onDelete}) {
                     </div>
                   </div>
                   <div style={{display:'flex',flexDirection:'column',justifyContent:'flex-end',gap:4}}>
-                    <div style={{fontSize:12,color:'#5c6b56',fontWeight:600}}>{hrs.toFixed(2)}hr{ot>0?` Â· ${ot.toFixed(2)} OT`:''}</div>
+                    <div style={{fontSize:12,color:'#5c6b56',fontWeight:600}}>{hrs.toFixed(2)}hr{ot>0?` - ${ot.toFixed(2)} OT`:''}</div>
                     <div style={{fontSize:13,fontWeight:700,color:ot>0?'#c98a3a':'#2f5d4a'}}>{fmtMoney2(cost)}</div>
                   </div>
                 </div>
@@ -887,7 +887,7 @@ function JobDetail({job,punches,plantsRec,materialsRec,equipmentLog,truckLog,tra
       <div style={styles.marginHero}>
         <div style={styles.marginHeroLabel}>GROSS MARGIN</div>
         <div style={{...styles.marginHeroValue,color:c.margin>=job.targetMargin?'#7dd9a8':c.margin>=job.targetMargin-5?'#f5c97a':'#f4856a'}}>{c.margin.toFixed(1)}%</div>
-        <div style={styles.marginHeroSub}>{c.fev?'âœ“ FEV achieved':`${(job.targetMargin-c.margin).toFixed(1)}pt below ${job.targetMargin}% target`}</div>
+        <div style={styles.marginHeroSub}>{c.fev?'FEV achieved':`${(job.targetMargin-c.margin).toFixed(1)}pt below ${job.targetMargin}% target`}</div>
       </div>
 
       {overBudget&&<div style={styles.warningBanner}><AlertTriangle size={16} style={{marginRight:8,flexShrink:0}}/>Labor hrs running {((c.laborHours/job.bidLaborHours-1)*100).toFixed(0)}% over {job.bidLaborHours}-hr target.</div>}
@@ -896,12 +896,12 @@ function JobDetail({job,punches,plantsRec,materialsRec,equipmentLog,truckLog,tra
       <Card>
         <div style={styles.detailGrid}>
           <DetailRow label="Revenue (bid)" value={fmtMoney(c.revenue)}/>
-          <DetailRow label="Labor" value={fmtMoney(c.laborCost)} sub={`${c.laborHours.toFixed(1)} crew-hrs${c.laborOTHours>0?` Â· ${c.laborOTHours.toFixed(1)} OT`:''}`}/>
-          <DetailRow label="Plants" value={fmtMoney(c.plantCost)} sub={`${c.totalPlantQty} plants Â· ${fmtMoney2(c.plantCost)} total wholesale cost`}/>
+          <DetailRow label="Labor" value={fmtMoney(c.laborCost)} sub={`${c.laborHours.toFixed(1)} crew-hrs${c.laborOTHours>0?` - ${c.laborOTHours.toFixed(1)} OT`:''}`}/>
+          <DetailRow label="Plants" value={fmtMoney(c.plantCost)} sub={`${c.totalPlantQty} plants - ${fmtMoney2(c.plantCost)} total wholesale cost`}/>
           <DetailRow label="Materials" value={fmtMoney(c.materialsCost)} sub={((materialsRec[job.id]?.miscExpenses||[]).length>0)?`incl. ${(materialsRec[job.id]?.miscExpenses||[]).length} misc expense(s)`:undefined}/>
-          <DetailRow label="Equipment" value={fmtMoney(c.equipmentCost)} sub={Object.entries(c.equipmentHours).map(([k,h])=>`${equipment.find(e=>e.id===k)?.name||k}: ${h.toFixed(1)}hr`).join(' Â· ')||'â€”'}/>
-          <DetailRow label="Truck fuel" value={fmtMoney(c.truckCost)} sub={Object.entries(c.truckMiles).map(([k,m])=>`${trucks.find(t=>t.id===k)?.name||k}: ${m}mi`).join(' Â· ')||'â€”'}/>
-          <DetailRow label="Trailers" value={fmtMoney(c.trailerCost)} sub={Object.entries(c.trailerDays).map(([k,d])=>`${trailers.find(t=>t.id===k)?.name||k}: ${d}d`).join(' Â· ')||'â€”'}/>
+          <DetailRow label="Equipment" value={fmtMoney(c.equipmentCost)} sub={Object.entries(c.equipmentHours).map(([k,h])=>`${equipment.find(e=>e.id===k)?.name||k}: ${h.toFixed(1)}hr`).join(' - ')||'-'}/>
+          <DetailRow label="Truck fuel" value={fmtMoney(c.truckCost)} sub={Object.entries(c.truckMiles).map(([k,m])=>`${trucks.find(t=>t.id===k)?.name||k}: ${m}mi`).join(' - ')||'-'}/>
+          <DetailRow label="Trailers" value={fmtMoney(c.trailerCost)} sub={Object.entries(c.trailerDays).map(([k,d])=>`${trailers.find(t=>t.id===k)?.name||k}: ${d}d`).join(' - ')||'-'}/>
           <div style={styles.divider}/>
           <DetailRow label="Total COGS" value={fmtMoney(c.totalCOGS)} bold/>
           <DetailRow label="Gross profit" value={fmtMoney(c.grossProfit)} bold/>
@@ -966,7 +966,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
               <div><div style={styles.hourLabel}>Bid total</div><NumberInput value={job.bidTotal} onChange={v=>updJob(job.id,{bidTotal:v})} suffix="$"/></div>
               <div><div style={styles.hourLabel}>Target margin</div><NumberInput value={job.targetMargin} onChange={v=>updJob(job.id,{targetMargin:v})} suffix="%"/></div>
               <div><div style={styles.hourLabel}>Target labor hours</div><NumberInput value={job.bidLaborHours} onChange={v=>updJob(job.id,{bidLaborHours:v})} suffix="hrs"/></div>
-              <div style={{gridColumn:'span 2'}}><div style={styles.hourLabel}>Notes (start date, gate code, client instructionsâ€¦)</div><input style={{...styles.textInput,flex:'unset',width:'100%'}} value={job.notes||''} placeholder="e.g. Start 7/10 Â· gate code 1234 Â· call client daily" onChange={e=>updJob(job.id,{notes:e.target.value})}/></div>
+              <div style={{gridColumn:'span 2'}}><div style={styles.hourLabel}>Notes (start date, gate code, client instructions...)</div><input style={{...styles.textInput,flex:'unset',width:'100%'}} value={job.notes||''} placeholder="e.g. Start 7/10 - gate code 1234 - call client daily" onChange={e=>updJob(job.id,{notes:e.target.value})}/></div>
               <div><div style={styles.hourLabel}>Status</div><select style={{...styles.select,flex:'unset',width:'100%'}} value={job.status} onChange={e=>updJob(job.id,{status:e.target.value})}><option value="active">Active</option><option value="complete">Complete</option></select></div>
             </div>
           </Card>
@@ -978,7 +978,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
         {crew.map((m,i)=>(
           <Card key={m.id}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:12}}>
-              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>moveCrew(m.id,-1)} disabled={i===0}>â–²</button><button style={styles.reorderBtn} onClick={()=>moveCrew(m.id,1)} disabled={i===crew.length-1}>â–¼</button></div>
+              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>moveCrew(m.id,-1)} disabled={i===0}>^</button><button style={styles.reorderBtn} onClick={()=>moveCrew(m.id,1)} disabled={i===crew.length-1}>v</button></div>
               <input style={{...styles.textInputBig,flex:1,marginBottom:0}} value={m.name} onChange={e=>updCrew(m.id,{name:e.target.value})}/>
               <button style={styles.deleteBtnSmall} onClick={()=>onUpdateCrew(crew.filter(c=>c.id!==m.id))}><X size={15}/></button>
             </div>
@@ -989,7 +989,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
           </Card>
         ))}
         <button style={styles.addChip} onClick={()=>onUpdateCrew([...crew,{id:uid('crew'),name:'New crew member',role:'Installer',burdenedRate:0}])}><Plus size={13}/> Add crew member</button>
-        <div style={styles.hint}>Burdened rate = base wage Ã— burden multiplier. OT at 1.5Ã— after 8 hrs/day.</div>
+        <div style={styles.hint}>Burdened rate = base wage x burden multiplier. OT at 1.5x after 8 hrs/day.</div>
       </>}
 
       {tab==='equipment'&&<>
@@ -997,7 +997,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
         {equipment.map((eq,i)=>(
           <Card key={eq.id}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>{const a=[...equipment];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateEquipment(a);}}} disabled={i===0}>â–²</button><button style={styles.reorderBtn} onClick={()=>{const a=[...equipment];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateEquipment(a);}}} disabled={i===equipment.length-1}>â–¼</button></div>
+              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>{const a=[...equipment];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateEquipment(a);}}} disabled={i===0}>^</button><button style={styles.reorderBtn} onClick={()=>{const a=[...equipment];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateEquipment(a);}}} disabled={i===equipment.length-1}>v</button></div>
               <input style={{...styles.textInputBig,flex:1,marginBottom:0}} value={eq.name} onChange={e=>onUpdateEquipment(equipment.map(x=>x.id===eq.id?{...x,name:e.target.value}:x))}/>
               <button style={styles.deleteBtnSmall} onClick={()=>onUpdateEquipment(equipment.filter(x=>x.id!==eq.id))}><X size={15}/></button>
             </div>
@@ -1010,7 +1010,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
         {trucks.map((tr,i)=>(
           <Card key={tr.id}>
             <div style={{display:'flex',alignItems:'center',gap:8}}>
-              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>{const a=[...trucks];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateTrucks(a);}}} disabled={i===0}>â–²</button><button style={styles.reorderBtn} onClick={()=>{const a=[...trucks];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateTrucks(a);}}} disabled={i===trucks.length-1}>â–¼</button></div>
+              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>{const a=[...trucks];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateTrucks(a);}}} disabled={i===0}>^</button><button style={styles.reorderBtn} onClick={()=>{const a=[...trucks];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateTrucks(a);}}} disabled={i===trucks.length-1}>v</button></div>
               <input style={{...styles.textInputBig,flex:1,marginBottom:0}} value={tr.name} onChange={e=>onUpdateTrucks(trucks.map(x=>x.id===tr.id?{...x,name:e.target.value}:x))}/>
               <button style={styles.deleteBtnSmall} onClick={()=>onUpdateTrucks(trucks.filter(x=>x.id!==tr.id))}><X size={15}/></button>
             </div>
@@ -1023,8 +1023,8 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
           <Card key={tr.id}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
               <div style={{display:'flex',flexDirection:'column',gap:2}}>
-                <button style={styles.reorderBtn} onClick={()=>{const a=[...trailers];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateTrailers(a);}}} disabled={i===0}>â–²</button>
-                <button style={styles.reorderBtn} onClick={()=>{const a=[...trailers];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateTrailers(a);}}} disabled={i===trailers.length-1}>â–¼</button>
+                <button style={styles.reorderBtn} onClick={()=>{const a=[...trailers];if(i>0){[a[i],a[i-1]]=[a[i-1],a[i]];onUpdateTrailers(a);}}} disabled={i===0}>^</button>
+                <button style={styles.reorderBtn} onClick={()=>{const a=[...trailers];if(i<a.length-1){[a[i],a[i+1]]=[a[i+1],a[i]];onUpdateTrailers(a);}}} disabled={i===trailers.length-1}>v</button>
               </div>
               <input style={{...styles.textInputBig,flex:1,marginBottom:0}} value={tr.name} onChange={e=>onUpdateTrailers((trailers||[]).map(x=>x.id===tr.id?{...x,name:e.target.value}:x))}/>
               <button style={styles.deleteBtnSmall} onClick={()=>onUpdateTrailers((trailers||[]).filter(x=>x.id!==tr.id))}><X size={15}/></button>
@@ -1034,7 +1034,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
           </Card>
         ))}
         <button style={styles.addChip} onClick={()=>onUpdateTrailers([...(trailers||[]),{id:uid('trailer'),name:'New Trailer',dayRate:0}])}><Plus size={13}/> Add trailer</button>
-        <div style={styles.hint}>Day rate = annual depreciation Ã· deployment days/year.</div>
+        <div style={styles.hint}>Day rate = annual depreciation divided by deployment days/year.</div>
 
         <div style={{...styles.sectionLabel,marginTop:20}}>MILEAGE RATE</div>
         <Card><FieldLabel icon={Truck}>Cost per mile</FieldLabel><NumberInput value={rates.mileageRate} onChange={v=>onUpdateRates({...rates,mileageRate:Number(v)||0})} suffix="$/mile"/></Card>
@@ -1044,7 +1044,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
         {stockItems.map((item,i)=>(
           <Card key={item.id}>
             <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
-              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>moveStock(item.id,-1)} disabled={i===0}>â–²</button><button style={styles.reorderBtn} onClick={()=>moveStock(item.id,1)} disabled={i===stockItems.length-1}>â–¼</button></div>
+              <div style={{display:'flex',flexDirection:'column',gap:2}}><button style={styles.reorderBtn} onClick={()=>moveStock(item.id,-1)} disabled={i===0}>^</button><button style={styles.reorderBtn} onClick={()=>moveStock(item.id,1)} disabled={i===stockItems.length-1}>v</button></div>
               <input style={{...styles.textInputBig,flex:1,marginBottom:0}} value={item.name} onChange={e=>updStock(item.id,{name:e.target.value})}/>
               <button style={styles.deleteBtnSmall} onClick={()=>onUpdateStock(stockItems.filter(s=>s.id!==item.id))}><X size={15}/></button>
             </div>
@@ -1055,7 +1055,7 @@ function SettingsView({jobs,rates,equipment,trucks,trailers,stockItems,crew,onUp
           </Card>
         ))}
         <button style={styles.addChip} onClick={()=>onUpdateStock([...stockItems,{id:uid('stock'),name:'New item',unit:'unit',avgUnitCost:0}])}><Plus size={13}/> Add stock item</button>
-        <div style={styles.hint}>Use blended average costs â€” fine-tune periodically.</div>
+        <div style={styles.hint}>Use blended average costs - fine-tune periodically.</div>
       </>}
 
       <button style={{...styles.btnSecondary,marginTop:20,width:'100%'}} onClick={onBack}>Done</button>
