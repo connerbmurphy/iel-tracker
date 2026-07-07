@@ -380,44 +380,78 @@ function ClockInView({job,crew,punches,onSaveBatch,onCancel}) {
 // ---------- Clock Out ----------
 function ClockOutView({job,crew,punches,onClockOutBatch,onCancel}) {
   const openPunches=(job ? punches.filter(p=>p.jobId===job.id&&p.clockIn&&!p.clockOut) : []);
+  const [selected,setSelected]=useState([]);
   const [states,setStates]=useState(()=>Object.fromEntries(openPunches.map(p=>[p.id,{clockOut:nowTimeStr(),overrideHrs:'',showOverride:false}])));
   if(!job) return null;
   const upd=(id,patch)=>setStates(s=>({...s,[id]:{...s[id],...patch}}));
-  const handleSaveAll=()=>{ const updates=openPunches.map(p=>{const st=states[p.id]||{}; return {id:p.id,clockOut:st.clockOut,...(st.overrideHrs!==''?{overrideHrs:Number(st.overrideHrs)}:{})}; }); onClockOutBatch(updates); };
+  const toggle=(id)=>setSelected(s=>s.includes(id)?s.filter(x=>x!==id):[...s,id]);
+  const handleSave=()=>{
+    const updates=selected.map(id=>{const st=states[id]||{}; return {id,clockOut:st.clockOut,...(st.overrideHrs!==''?{overrideHrs:Number(st.overrideHrs)}:{})}; });
+    onClockOutBatch(updates);
+  };
   return (
     <div style={styles.screen}>
       <div style={styles.entryHeader}><LogOut size={20} color="#2f5d4a"/><div><div style={styles.entryTitle}>Clock out</div><div style={styles.entrySub}>{job.name}</div></div></div>
       {openPunches.length===0&&<div style={styles.hint}>No one is currently clocked in on this job.</div>}
-      {openPunches.map(punch=>{
-        const m=crew.find(c=>c.id===punch.crewId);
-        const st=states[punch.id]||{clockOut:'',overrideHrs:'',showOverride:false};
-        const autoHrs=hoursFromPunch(punch.clockIn,st.clockOut);
-        const finalHrs=st.overrideHrs!==''?Number(st.overrideHrs):autoHrs;
-        const ot=Math.max(0,finalHrs-8);
-        const cost=calcPersonLaborCost(finalHrs,m?m.burdenedRate:0);
-        return (
-          <Card key={punch.id}>
-            <div style={{fontWeight:700,fontSize:15,marginBottom:4}}>{m?.name||'?'}</div>
-            <div style={{fontSize:12,color:'#8a9a8e',marginBottom:12}}>{m?.role} - in {fmtTime(punch.clockIn)}</div>
-            <div style={styles.settingsGrid}>
-              <div><div style={styles.hourLabel}>Clock-out time</div><input type="time" style={styles.timeInput} value={st.clockOut} onChange={e=>upd(punch.id,{clockOut:e.target.value})}/></div>
-              <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
-                <div style={{fontSize:12,color:'#5c6b56'}}>{finalHrs.toFixed(2)}h{ot>0?` - ${ot.toFixed(2)}OT`:''}</div>
-                <div style={{marginLeft:'auto',fontWeight:700,color:ot>0?'#c98a3a':'#2f5d4a',fontSize:13}}>{fmtMoney2(cost)}</div>
+
+      <Card>
+        <FieldLabel>Who's clocking out?</FieldLabel>
+        {openPunches.length===0&&<div style={styles.hint}>No open punches.</div>}
+        <div style={{display:'flex',flexDirection:'column',gap:8}}>
+          {openPunches.map(punch=>{
+            const m=crew.find(c=>c.id===punch.crewId);
+            const isSelected=selected.includes(punch.id);
+            return (
+              <div key={punch.id} style={{...styles.crewSelectRow,background:isSelected?'#eef6f1':'#fafaf8',borderColor:isSelected?'#2f5d4a':'#e2e0d6'}} onClick={()=>toggle(punch.id)}>
+                <div>
+                  <div style={{fontWeight:600,fontSize:14}}>{m?.name||'?'}</div>
+                  <div style={{fontSize:12,color:'#8a9a8e'}}>{m?.role} - in {fmtTime(punch.clockIn)}</div>
+                </div>
+                {isSelected&&<Check size={18} color="#2f5d4a"/>}
               </div>
-            </div>
-            {!st.showOverride
-              ? <button style={{...styles.addChip,marginTop:10}} onClick={()=>upd(punch.id,{showOverride:true,overrideHrs:finalHrs.toFixed(2)})}>Override hours</button>
-              : <div style={{marginTop:10,display:'flex',gap:8,alignItems:'center'}}>
-                  <div style={styles.numberInputWrap}><input type="number" inputMode="decimal" style={styles.numberInput} value={st.overrideHrs} onChange={e=>upd(punch.id,{overrideHrs:e.target.value})} onFocus={e=>e.target.select()}/><span style={styles.numberSuffix}>hrs (manual)</span></div>
-                  <button style={styles.removeBtn} onClick={()=>upd(punch.id,{showOverride:false,overrideHrs:''})}><X size={15}/></button>
-                </div>}
-          </Card>
-        );
-      })}
+            );
+          })}
+        </div>
+      </Card>
+
+      {selected.length>0&&(
+        <Card>
+          <FieldLabel icon={Clock}>Clock-out time</FieldLabel>
+          {selected.map(id=>{
+            const punch=openPunches.find(p=>p.id===id);
+            const m=crew.find(c=>c.id===punch?.crewId);
+            const st=states[id]||{clockOut:nowTimeStr(),overrideHrs:'',showOverride:false};
+            const autoHrs=hoursFromPunch(punch?.clockIn,st.clockOut);
+            const finalHrs=st.overrideHrs!==''?Number(st.overrideHrs):autoHrs;
+            const ot=Math.max(0,finalHrs-8);
+            const cost=calcPersonLaborCost(finalHrs,m?m.burdenedRate:0);
+            return (
+              <div key={id} style={{marginBottom:14,paddingBottom:14,borderBottom:'1px solid #e2e0d6'}}>
+                <div style={{fontWeight:700,fontSize:14,marginBottom:8}}>{m?.name||'?'}</div>
+                <div style={styles.settingsGrid}>
+                  <div><div style={styles.hourLabel}>Clock-out time</div><input type="time" style={styles.timeInput} value={st.clockOut} onChange={e=>upd(id,{clockOut:e.target.value})}/></div>
+                  <div style={{display:'flex',alignItems:'flex-end',paddingBottom:4}}>
+                    <div style={{fontSize:12,color:'#5c6b56'}}>{finalHrs.toFixed(2)}h{ot>0?` - ${ot.toFixed(2)}OT`:''}</div>
+                    <div style={{marginLeft:'auto',fontWeight:700,color:ot>0?'#c98a3a':'#2f5d4a',fontSize:13}}>{fmtMoney2(cost)}</div>
+                  </div>
+                </div>
+                {!st.showOverride
+                  ? <button style={{...styles.addChip,marginTop:8}} onClick={()=>upd(id,{showOverride:true,overrideHrs:finalHrs.toFixed(2)})}>Override hours</button>
+                  : <div style={{marginTop:8,display:'flex',gap:8,alignItems:'center'}}>
+                      <div style={styles.numberInputWrap}><input type="number" inputMode="decimal" style={styles.numberInput} value={st.overrideHrs} onChange={e=>upd(id,{overrideHrs:e.target.value})} onFocus={e=>e.target.select()}/><span style={styles.numberSuffix}>hrs (manual)</span></div>
+                      <button style={styles.removeBtn} onClick={()=>upd(id,{showOverride:false,overrideHrs:''})}><X size={15}/></button>
+                    </div>}
+              </div>
+            );
+          })}
+        </Card>
+      )}
+
       <div style={styles.bottomBar}>
         <button style={styles.btnSecondary} onClick={onCancel}>Cancel</button>
-        <button style={{...styles.btnPrimary,opacity:openPunches.length?1:0.4}} onClick={handleSaveAll} disabled={!openPunches.length}>Clock out all</button>
+        <button style={{...styles.btnPrimary,opacity:selected.length?1:0.4}} onClick={handleSave} disabled={!selected.length}>
+          Clock out {selected.length>0?`(${selected.length})`:''}
+        </button>
       </div>
     </div>
   );
